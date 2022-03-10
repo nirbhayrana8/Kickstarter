@@ -1,7 +1,17 @@
-import '../styles/globals.css'
+import "../styles/globals.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import Layout from "../components/Layout";
+
+import {AuthProvider} from "../contexts/AuthContext"
 
 function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />
+  return (
+    <AuthProvider>
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
+    </AuthProvider>
+  );
 }
 
-export default MyApp
+export default MyApp;
