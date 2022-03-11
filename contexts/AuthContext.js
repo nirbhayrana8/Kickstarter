@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    const unsubscribe = firebase.auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setLoading(false);
     });
@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = {
+    loading,
     currentUser,
     signup,
     login,

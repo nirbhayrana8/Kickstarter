@@ -29,7 +29,7 @@ export default function Login() {
       setError("");
       setLoading(true);
       await login(emailRef.current.value, passwordRef.current.value);
-      router.push("/campaigns/create-new-campaign");
+      router.push("/campaigns/new-campaign");
     } catch (error) {
       setError("Failed to sign in");
     }

@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
+import { getDatabase, ref, set } from "firebase/database";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -10,6 +11,8 @@ const firebaseConfig = initializeApp({
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
 
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+
+  databaseUrl: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
 
@@ -24,6 +27,8 @@ const app = (!getApps().length) ? initializeApp(firebaseConfig) : getApp();
 
 const auth = getAuth(app);
 
+const database = getDatabase(app);
+
 const firebase = {
   auth: auth,
   app: app,
@@ -32,6 +37,7 @@ const firebase = {
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
   },
+  db: database
 };
 
 export default firebase;
