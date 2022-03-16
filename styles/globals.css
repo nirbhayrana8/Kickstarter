@@ -1,3 +1,14 @@
+:root {
+  /* Progress Button Variables */
+	--progress-btn-button-width: 125px;
+	--progress-btn-button-height: 40px;
+	--progress-btn-squish-animation-duration: 600ms;
+	--progress-btn-progress-animation-duration: 600ms;
+	--progress-btn-circle-animation-duration: 350ms;
+	--progress-btn-checkmark-animation-duration: 350ms;
+  /* --------------------------- */
+  }
+
 footer {
   position: fixed;
   left: 0;

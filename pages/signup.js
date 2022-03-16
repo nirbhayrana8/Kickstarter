@@ -30,7 +30,7 @@ export default function Signup() {
       setError("");
       setLoading(true);
       await signup(emailRef.current.value, passwordRef.current.value);
-      router.push("/");
+      router.back();
     } catch (error) {
       setError("Failed to create an account");
     }
@@ -38,7 +38,7 @@ export default function Signup() {
   }
 
   function handleLoginClicked() {
-    router.push("/login");
+    router.replace("/login");
   }
 
   return (

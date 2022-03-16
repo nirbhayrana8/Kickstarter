@@ -1,0 +1,131 @@
+
+  .btn {
+
+	position: relative;
+	background-color: #2b2d2f;
+	color: #71dfbe;
+	border: none;
+	border-radius: 0.25em;
+	width: var(--progress-btn-button-width);
+	height: var(--progress-btn-button-height);
+	font-weight: bold;
+	cursor: pointer;
+	padding: 0;
+  }
+
+  .btn.animating {
+	background-color: transparent;
+	color: transparent;
+	user-select: none;
+	cursor: default;
+	animation: hide 0ms
+	  calc(var(--progress-btn-squish-animation-duration) + var(--progress-btn-progress-animation-duration))
+	  forwards;
+  }
+
+  .btn::before {
+
+	content: "";
+	display: none;
+	position: absolute;
+	background-color: #2b2d2f;
+	inset: 0;
+	border-radius: 0.25em;
+	animation: squish var(--progress-btn-squish-animation-duration)
+	  cubic-bezier(0.53, 1.36, 0, 1.3) forwards;
+  }
+
+  .btn::after {
+
+	content: "";
+	display: none;
+	position: absolute;
+	background-color: #aaa;
+	left: 51%;
+	right: 51%;
+	top: 45%;
+	bottom: 45%;
+	border-radius: 0.25em;
+	animation: progress var(--progress-btn-progress-animation-duration)
+	  var(--progress-btn-squish-animation-duration) forwards;
+  }
+
+  .btn.animating::before,
+  .btn.animating::after {
+	display: block;
+  }
+
+  .btn.animating + .checkmark_container {
+
+	background-color: #2b2d2f;
+	border-radius: 0.25em;
+	width: 0;
+	height: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	animation: circle_animation var(--progress-btn-circle-animation-duration)
+	  calc(var(--progress-btn-squish-animation-duration) + var(--progress-btn-progress-animation-duration))
+	  cubic-bezier(0.17, 0.75, 0.73, 1.68) forwards;
+  }
+
+  .btn.animating + .checkmark_container .checkmark_svg {
+
+	stroke: white;
+	width: 25px;
+	stroke-width: 3px;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-dashoffset: 40.84104537963867;
+	stroke-dasharray: 40.84104537963867;
+	animation: checkmark var(--progress-btn-checkmark-animation-duration)
+	  calc(
+		var(--progress-btn-squish-animation-duration) + var(--progress-btn-progress-animation-duration) +
+		  var(--progress-btn-circle-animation-duration)
+	  )
+	  forwards;
+  }
+
+  @keyframes squish {
+	100% {
+	  left: -25%;
+	  right: -25%;
+	  top: 45%;
+	  bottom: 45%;
+	  border-radius: 0.25em;
+	}
+  }
+
+  @keyframes progress {
+	100% {
+	  left: -25%;
+	  right: -25%;
+	}
+  }
+
+  @keyframes hide {
+	100% {
+	  width: 0;
+	  height: 0;
+	}
+  }
+
+  @keyframes circle_animation {
+
+	0% {
+	  width: calc(125px * 1.5);
+	  height: calc(40px * 0.1);
+	}
+	100% {
+	  width: 50px;
+	  height: 50px;
+	  border-radius: 100%;
+	  background-color: #71dfbe;
+	}
+  }
+
+  @keyframes checkmark {
+	100% {
+	  stroke-dashoffset: 0;
+	}
+  }

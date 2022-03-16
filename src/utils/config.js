@@ -2,7 +2,7 @@ const checkWalletIsConnected = async () => {
 	const { ethereum } = window;
 
 	if (!ethereum) {
-	  alert("Please install MetaMask");
+	  console.log("Please install MetaMask");
 	  return;
 	}
 	try {
@@ -13,7 +13,7 @@ const checkWalletIsConnected = async () => {
 		const account = accounts[0];
 		return account;
 	  } else {
-		alert("No authorised account found");
+		console.log("Login to Metamask to continue.");
 	  }
 	} catch (error) {
 	  console.log(error);
@@ -24,7 +24,7 @@ const checkWalletIsConnected = async () => {
 	const { ethereum } = window;
 
 	if (!ethereum) {
-	  alert("Please install MetaMask");
+		console.log("Please install MetaMask");
 	  return;
 	}
 	try {
@@ -35,7 +35,7 @@ const checkWalletIsConnected = async () => {
 		const account = accounts[0];
 		return account;
 	  } else {
-		alert("No authorised account found");
+		console.log("No authorised account found");
 	  }
 	} catch (error) {
 	  if (error.code === 4001) {

@@ -17,10 +17,8 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { currentUser, login } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
-
-  console.log("Login: " + login);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -29,7 +27,7 @@ export default function Login() {
       setError("");
       setLoading(true);
       await login(emailRef.current.value, passwordRef.current.value);
-      router.push("/campaigns/new-campaign");
+      router.back();
     } catch (error) {
       setError("Failed to sign in");
     }
@@ -37,7 +35,7 @@ export default function Login() {
   }
 
   function handleNeedAnAccount() {
-    router.push("/signup");
+    router.replace("/signup");
   }
 
   return (

@@ -8,25 +8,25 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState();
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const auth = firebase.auth;
 
-  function login(email, password) {
-    firebase.methods.signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    await firebase.methods.signInWithEmailAndPassword(auth, email, password);
   }
 
-  function signup(email, password) {
-    firebase.methods.createUserWithEmailAndPassword(auth, email, password);
+  async function signup(email, password) {
+    await firebase.methods.createUserWithEmailAndPassword(auth, email, password);
   }
 
-  function logout() {
-    return auth.signOut();
+  async function logout() {
+    return await auth.signOut();
   }
 
-  function resetPassword(email) {
-    firebase.methods.sendPasswordResetEmail(auth, email);
+  async function resetPassword(email) {
+    await firebase.methods.sendPasswordResetEmail(auth, email);
   }
 
   useEffect(() => {
