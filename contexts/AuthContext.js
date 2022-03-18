@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import firebase from "../config/firebase";
+import { saveUser } from "../config/database"
 
 const AuthContext = React.createContext();
 
@@ -10,8 +11,9 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [newUserCreated, setNewUserCreated] = useState();
 
-  const auth = firebase.auth;
+  const { auth } = firebase;
 
   async function login(email, password) {
     await firebase.methods.signInWithEmailAndPassword(auth, email, password);
@@ -19,6 +21,7 @@ export function AuthProvider({ children }) {
 
   async function signup(email, password) {
     await firebase.methods.createUserWithEmailAndPassword(auth, email, password);
+    setNewUserCreated(true);
   }
 
   async function logout() {
@@ -29,6 +32,7 @@ export function AuthProvider({ children }) {
     await firebase.methods.sendPasswordResetEmail(auth, email);
   }
 
+  //set current user
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
@@ -37,6 +41,17 @@ export function AuthProvider({ children }) {
 
     return unsubscribe;
   }, []);
+
+  //Add user to backend
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user && newUserCreated) {
+        saveUser(user.uid);
+      }
+    });
+
+    return unsubscribe;
+  }, [newUserCreated]);
 
   const value = {
     loading,

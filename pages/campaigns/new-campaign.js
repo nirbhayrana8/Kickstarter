@@ -38,7 +38,7 @@ export default function NewCampaign() {
 			setModalData({
 				visible: true,
 				title: "Connect wallet handler",
-				content: "You need to connect wallet handler to continue",
+				content: "Please ensure a wallet handler is installed to continue.",
 				buttonText: "Connect",
 				submit: setEthereumAccount
 			});
@@ -48,6 +48,17 @@ export default function NewCampaign() {
 	}
 
 	useEffect(() => {
+
+		if (!contract) {
+			setModalData({
+				visible: true,
+				title: "Connect wallet handler",
+				content: "Please ensure a wallet handler is installed to continue.",
+				buttonText: "Connect",
+				submit: setEthereumAccount
+			});
+			return;
+		}
 
 		init();
 
@@ -88,7 +99,7 @@ export default function NewCampaign() {
 			setModalData({
 				visible: true,
 				title: "Connect wallet handler",
-				content: "You need to connect wallet handler to continue",
+				content: "Please ensure a wallet handler is installed to continue.",
 				buttonText: "Connect",
 				submit: setEthereumAccount
 			});

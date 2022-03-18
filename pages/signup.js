@@ -32,6 +32,7 @@ export default function Signup() {
       await signup(emailRef.current.value, passwordRef.current.value);
       router.back();
     } catch (error) {
+      console.log(error);
       setError("Failed to create an account");
     }
     setLoading(false);

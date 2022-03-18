@@ -3,6 +3,9 @@ import getProvider from "./provider"
 const { abi, networks } = require("../contracts/CampaignFactory.json");
 
 export default function getContract() {
-	const signer = getProvider().getSigner();
+	const provider = getProvider();
+	if (!provider) { return null }
+
+	const signer = provider.getSigner();
 	return new ethers.Contract(networks["4"].address, abi, signer);
 };

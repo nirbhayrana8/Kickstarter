@@ -4,7 +4,7 @@ export default function getProvider() {
 	const ethereum = window.ethereum;
 
 	if (!ethereum) {
-		console.log("MetaMask is not available");
+		console.log("Wallet Handler is not available");
 		return;
 	}
 
