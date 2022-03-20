@@ -8,11 +8,15 @@ import { ethers } from "ethers";
 
 import styles from "../../styles/new-campaign.module.css"
 
+import { saveCreatedCampaign } from "../../config/database"
 import { checkWalletIsConnected, connectWalletHandler } from "../../src/utils/config"
+import { useAuth } from "../../contexts/AuthContext"
+import { useTransaction } from "../../contexts/TransactionContext"
 import getContract from "../../src/utils/contract"
 import getProvider from "../../src/utils/provider"
 import ProtectedRoute from "../../components/ProtectedRoute"
 import PopUpDialog from "../../components/PopUpDialog"
+import LoadingScreen from "../../components/LoadingScreen"
 
 const MINIMUM_NAME_LENGTH = 3;
 const MINIMUM_DESCRIPTION_LENGTH = 30;
@@ -21,8 +25,10 @@ export default function NewCampaign() {
 	const [walletAccount, setWalletAccount] = useState(null);
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [screenText, setScreenText] = useState("");
 
 	const [modalData, setModalData] = useState({});
+	const { currentUser } = useAuth();
 
 	const nameRef = useRef();
 	const descriptionRef = useRef();
@@ -47,6 +53,8 @@ export default function NewCampaign() {
 		}
 	}
 
+	const { lastTransaction, updateTransaction } = useTransaction();
+
 	useEffect(() => {
 
 		if (!contract) {
@@ -64,11 +72,20 @@ export default function NewCampaign() {
 
 		const filter = contract.filters.CampaignCreated(walletAccount);
 
-		const eventListner = (creator, createdCampaign, timeCreated, event) => {
+		const eventListner = (creator, createdCampaign, timeCreated) => {
 			let d = new Date(timeCreated * 1000);
 			let time = d.toUTCString();
+			const metaData = {
+				"createdAt": time,
+				"description": descriptionRef.current.value,
+				"minimumValue": minValueRef.current.value
+			}
+			if (lastTransaction === createdCampaign) {
+				return;
+			}
+			saveCreatedCampaign(currentUser, creator, createdCampaign, metaData);
+			updateTransaction(createdCampaign);
 			console.log(`creator: ${creator}, address: ${createdCampaign}, timeCreated: ${time}`);
-			console.log(event);
 		};
 
 		const provider = getProvider();
@@ -120,6 +137,11 @@ export default function NewCampaign() {
 			return;
 		}
 
+		if (isNaN(minimumValue)) {
+			setError("Minimum value must be a number");
+			return;
+		}
+
 		let gasEstimate = await contract.estimateGas.createCampaign(minimumValue);
 		gasEstimate = parseInt(gasEstimate.toString());
 		let gasPrice = await getProvider().getGasPrice();
@@ -136,13 +158,32 @@ export default function NewCampaign() {
 	}
 
 	const executeTransaction = async () => {
+		closeModal();
+		const provider = getProvider();
 		try {
 			setLoading(true);
-			await contract.createCampaign(minValueRef.current.value);
-		} catch (error) {
-			console.log(error);
-		}
 
+			setScreenText("Please approve request");
+			let tx = await contract.createCampaign(minValueRef.current.value);
+
+			// Blocks until transaction complete
+			setScreenText("Creating your campaign...");
+			await provider.waitForTransaction(tx.hash, 1, 150000);
+
+		} catch (error) {
+			if (error.code === 4001) {
+				closeModal();
+				setModalData({
+					visible: true,
+					title: "Transaction Failed",
+					content: "The transaction was cancelled.",
+					buttonText: "Continue",
+					submit: closeModal
+				});
+			} else {
+				console.log(error);
+			}
+		}
 		setLoading(false);
 	}
 
@@ -155,6 +196,7 @@ export default function NewCampaign() {
 		<PopUpDialog
 		 modalClose={closeModal}
 		 data={modalData} />
+		 <LoadingScreen loading={loading} text={screenText}/>
 			<div className={styles.card}>
 				<Card>
 				<Card.Header>

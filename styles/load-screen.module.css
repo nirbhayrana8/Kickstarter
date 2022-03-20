@@ -1,0 +1,17 @@
+.container {
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.5);
+	position: absolute;
+	z-index: 1;
+	display: none;
+}
+
+.container.visible {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	color: #fff;
+	user-select: none;
+}
