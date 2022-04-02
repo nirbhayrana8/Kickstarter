@@ -16,8 +16,8 @@ export default function Signup() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const { signup } = useAuth();
+
   const router = useRouter();
 
   async function handleSubmit(e) {

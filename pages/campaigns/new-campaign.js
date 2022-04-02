@@ -77,8 +77,10 @@ export default function NewCampaign() {
 			let time = d.toUTCString();
 			const metaData = {
 				"createdAt": time,
+				"name": nameRef.current.value,
 				"description": descriptionRef.current.value,
-				"minimumValue": minValueRef.current.value
+				"minimumValue": minValueRef.current.value,
+				"raisedValue": 0
 			}
 			if (lastTransaction === createdCampaign) {
 				return;

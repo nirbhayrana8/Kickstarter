@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
 import Link from "next/Link"
-import {useRouter} from "next/router"
-import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "next/router"
 
 import Form from "react-bootstrap/Form"
 import Card from "react-bootstrap/Card"
 import Button from "react-bootstrap/Button"
 import Alert from "react-bootstrap/Alert"
+
+import { useAuth } from "../contexts/AuthContext"
 
 import styles from "../styles/auth.module.css"
 
@@ -16,8 +17,8 @@ export default function Login() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const { login } = useAuth();
+
   const router = useRouter();
 
   async function handleSubmit(e) {
