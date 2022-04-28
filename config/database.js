@@ -1,4 +1,4 @@
-import { set, get, update, push, ref, onValue } from "firebase/database"
+import { set, get, update, push, ref, runTransaction, ServerValue } from "firebase/database"
 import firebase from "./firebase"
 
 const db = firebase.db;
@@ -25,11 +25,12 @@ export const saveCreatedCampaign = async (user, creator, address, metaData) => {
 		const campaignsRef = ref(db, `campaigns/${address}`);
 		const {name, ...meta} = metaData;
 		await set(campaignsRef, {
-			"name": name,
+			"active": true,
 			"creatorUID": user.uid,
 			"creatorAddress": creator,
-			"active": true,
-			"meta": meta
+			"meta": meta,
+			"name": name,
+			"number_of_requests": 0
 		});
 
 	} catch (error) {
@@ -66,11 +67,31 @@ export const saveInvestor = async (campaignAddress, investor) => {
 };
 
 export const saveRequest = async (campaignAddress, data) => {
-	const campaignInvestorRef = ref(db, `campaigns/${campaignAddress}/requests`);
+	const campaignRef = ref(db, `campaigns/${campaignAddress}`);
 	try {
-		await push(campaignInvestorRef, data);
+		await runTransaction(campaignRef, (campaignData) => {
+			campaignData.number_of_requests += 1;
+			return campaignData;
+		});
+		await push(ref(db, `campaigns/${campaignAddress}/requests`), data);
 	} catch (error) {
 		console.log(error);
 	}
+
 };
 
+export const getAllCampaigns = async () => {
+	let data = null;
+	const campaignRef = ref(db, `campaigns`);
+	try {
+		const snapshot = await get(campaignRef);
+		if (snapshot.exists()) {
+			data = snapshot.val();
+		} else {
+			console.log("Value does not exist");
+		}
+	} catch (error) {
+		console.log(error);
+	}
+	return data;
+}

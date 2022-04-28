@@ -15,28 +15,44 @@ import { getCustomContract } from "../../../src/utils/contract"
 import { checkWalletIsConnected, connectWalletHandler } from "../../../src/utils/config"
 import CreateRequest from "../../../components/CreateRequest";
 import { useRouter } from "next/router";
+import Vote from "../../../components/Vote";
+import FinaliseRequest from "../../../components/FinaliseRequest";
 
 export const getServerSideProps = async (context) => {
   const { id: campaignAddress } = context.query;
-  const data = await getCampaignData(campaignAddress);
-  return { props: { data, campaignAddress } }
+  let data = await getCampaignData(campaignAddress);
+
+  let requests = null;
+  let investors = null;
+
+  if (data.requests) {
+    const keys = Object.keys(data.requests);
+    requests = Object.values(data.requests);
+    requests.map((request, index) => request.key = keys[index]);
+  }
+
+  if (data.investors) {
+    investors = Object.values(data.investors);
+  }
+  data = {...data, requests, investors, campaignAddress};
+  return { props: { data } }
 }
 
-export default function Campaign({ data, campaignAddress }) {
-
-  //1. Check if person opening page is creator, investor, or none of the above.
-  //2.a. Render create request, finalise request if creator
-  //2.b. Render vote if investor.
-  //2.c. Render invest if none of above.
-  //3. Build voting and create request pages
+export default function Campaign({ data }) {
 
   const [walletAccount, setWalletAccount] = useState(null);
   const [informationModalData, setInformationModalData] = useState({});
-  const [createRequestData, setCreateRequestData] = useState({});
 
+  const [createRequestData, setCreateRequestData] = useState({});
+  const [requestDialogData, setRequestDialogData] = useState({});
+  const [finaliseDialogData, setFinaliseDialogData] = useState({});
   const [investData, setInvestData] = useState({});
+
 	const [screenText, setScreenText] = useState("");
   const [isLoadingScreenVisible, setIsLoadingScreenVisible] = useState(false);
+
+  const [isCreator, setIsCreator] = useState(false);
+  const [isInvestor, setIsInvestor] = useState(false);
 
   const { currentUser } = useAuth();
   const router = useRouter();
@@ -47,13 +63,25 @@ export default function Campaign({ data, campaignAddress }) {
   const showLoadingScreen = () => { setIsLoadingScreenVisible(true); }
   const hideLoadingScreen = () => { setIsLoadingScreenVisible(false); }
 
+  const showVotingDialog = () => {
+    if (!walletAccount) {
+      setInformationModalData({
+        visible: true,
+				title: "Connect wallet handler",
+				content: "Please ensure a wallet handler is installed to continue.",
+				buttonText: "Connect",
+				submit: setEthereumAccount
+      });
+      return;
+    }
+    setRequestDialogData((prev) => ({...prev, visible: true}));
+  }
+  const hideVotingDialog = () => { setRequestDialogData((prev) => ({...prev, visible: false})); }
+
+  const hideFinaliseDialog = () => { setFinaliseDialogData((prev) => ({...prev, visible: false})) }
+
   const closeInformationModal = () => {
     setInformationModalData((prev) => ({...prev, visible: false}));
-  }
-
-  let isCreator = false;
-  if (currentUser) {
-    isCreator = currentUser.uid === data.creatorUID;
   }
 
   const init = async () => {
@@ -64,6 +92,7 @@ export default function Campaign({ data, campaignAddress }) {
 	}
 
   const handleError = (error) => {
+    hideLoadingScreen();
     if (error.code === 4001) {
       closeModal();
       setInformationModalData({
@@ -74,7 +103,6 @@ export default function Campaign({ data, campaignAddress }) {
         submit: closeInformationModal
       });
     } else if (error.code === "INSUFFICIENT_FUNDS") {
-      console.log(error.error.message)
       closeModal();
       setInformationModalData({
         visible: true,
@@ -83,6 +111,8 @@ export default function Campaign({ data, campaignAddress }) {
         buttonText: "Continue",
         submit: closeInformationModal
       });
+    } else if (error.code === "UNPREDICTABLE_GAS_LIMIT") {
+
     } else {
       console.log(error);
     }
@@ -90,14 +120,41 @@ export default function Campaign({ data, campaignAddress }) {
 
   useEffect(() => {
     init();
+
+    if (currentUser.uid === data.creatorUID) {
+      setIsCreator(true);
+    }
+
+    if (data.investors && data.investors.includes(currentUser.uid)) {
+      setIsInvestor(true);
+    }
+
     setInvestData({
       minimumValue: data.meta.minimumValue
     });
 
     setCreateRequestData({
       visible: false,
-      campaignAddress,
+      campaignAddress: data.campaignAddress,
       hide: hideCreateRequest,
+      showLoading: showLoadingScreen,
+      hideLoading: hideLoadingScreen,
+      setLoadingScreenText: setScreenText,
+      handleError
+    });
+
+    setRequestDialogData({
+      hide: hideVotingDialog,
+      campaignAddress: data.campaignAddress,
+      showLoading: showLoadingScreen,
+      hideLoading: hideLoadingScreen,
+      setLoadingScreenText: setScreenText,
+      handleError
+    });
+
+    setFinaliseDialogData({
+      hide: hideFinaliseDialog,
+      campaignAddress: data.campaignAddress,
       showLoading: showLoadingScreen,
       hideLoading: hideLoadingScreen,
       setLoadingScreenText: setScreenText,
@@ -110,7 +167,11 @@ export default function Campaign({ data, campaignAddress }) {
       closeInformationModal();
     }
     setInvestData((prev) => ({...prev, investInCampaign: invest}));
-  }, [walletAccount])
+
+    if (isInvestor) {
+      setRequestDialogData((prev) => ({ ...prev, address: data.campaignAddress }))
+    }
+  }, [walletAccount, isInvestor]);
 
   async function setEthereumAccount() {
 		let account = await connectWalletHandler();
@@ -143,7 +204,7 @@ export default function Campaign({ data, campaignAddress }) {
     }
 
     setIsLoadingScreenVisible(true);
-    const contract = getCustomContract(campaignAddress);
+    const contract = getCustomContract(data.campaignAddress);
 
     setScreenText("Please approve request");
     try {
@@ -154,7 +215,7 @@ export default function Campaign({ data, campaignAddress }) {
       setScreenText("Investing in campaign...");
       const provider = getProvider();
       await provider.waitForTransaction(tx.hash, 1, 150000);
-      saveInvestor(campaignAddress, currentUser.uid);
+      saveInvestor(data.campaignAddress, currentUser.uid);
 
     } catch (error) {
       handleError(error);
@@ -164,7 +225,21 @@ export default function Campaign({ data, campaignAddress }) {
 
   const hideCreateRequest = () => { setCreateRequestData((prev) => ({...prev, visible: false})) }
 
-  const createRequest = () => {
+  const openFinaliseRequestDialog = () => {
+    if (!walletAccount) {
+      setInformationModalData({
+        visible: true,
+				title: "Connect wallet handler",
+				content: "Please ensure a wallet handler is installed to continue.",
+				buttonText: "Connect",
+				submit: setEthereumAccount
+      });
+      return;
+    }
+    setFinaliseDialogData((prev) => ({...prev, visible: true}));
+  }
+
+  const openCreateRequestDialog = () => {
     if (!walletAccount) {
       setInformationModalData({
         visible: true,
@@ -183,6 +258,8 @@ export default function Campaign({ data, campaignAddress }) {
     <PopUpDialog modalClose={closeInformationModal} data={informationModalData}/>
     <LoadingScreen loading={isLoadingScreenVisible} text={screenText} />
     <CreateRequest data={createRequestData}/>
+    <Vote requests={data.requests} data={requestDialogData}/>
+    <FinaliseRequest requests={data.requests} data={finaliseDialogData}/>
     <div className={styles.container}>
       <Card className={styles.card}>
         <Card.Body>
@@ -192,19 +269,23 @@ export default function Campaign({ data, campaignAddress }) {
         <p>{data.meta.minimumValue}</p>
         {isCreator ? (
           <div className="button_container">
-            <Button onClick={createRequest} className="m-4">Create Request</Button>
+            <Button onClick={openCreateRequestDialog} className="m-4">Create Request</Button>
 
-            <Button >Finalise Request</Button>
+            <Button onClick={openFinaliseRequestDialog} className="m-4">Finalise Request</Button>
           </div>
-          ) : (
-          <div className="invest">
+          ) :
+          isInvestor ? (
+              <Button onClick={showVotingDialog}>Vote</Button>
+              )
+           :
+          <>
             <InvestInCampaign
               data={investData}
               modalClose={closeModal}
               />
             <Button onClick={showModal}>Invest</Button>
-          </div>
-          )}
+          </>
+          }
         </Card.Body>
       </Card>
     </div>
