@@ -4,10 +4,27 @@ import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import styles from "../styles/dashboard.module.css";
 
+import ListItem from "../components/ListItem"
+import { getAllCampaigns } from "../config/database";
+
 import { useRouter } from 'next/router'
 
-export default function Home() {
+export const getServerSideProps = async () => {
+  let data = await getAllCampaigns();
+  if (data) {
+    const keys = Object.keys(data);
+    data = Object.values(data);
+    data = data.slice(0, 3);
+    data.forEach((campaign, index) => {
+      campaign.campaignAddress = keys[index];
+    });
+  }
+  return { props: { data } }
+}
+
+export default function Home({ data }) {
   const router = useRouter();
+  console.log(data)
   return (
     <div style={{minHeight: "100vh",}}>
       <Container fluid className={styles.container}>
@@ -17,15 +34,11 @@ export default function Home() {
           </h1>
         <section>
           <Row md={4}>
-            <Col className={styles.current_campaigns}>
-              <h4>This is a test to see if this works</h4>
-            </Col>
-            <Col className={styles.current_campaigns}>
-              <h4>This is a test to see if this works</h4>
-            </Col>
-            <Col className={styles.current_campaigns}>
-              <h4>This is a test to see if this works</h4>
-            </Col>
+            {data.map(campaignData => (
+              <Col>
+                <ListItem key={data.campaignAddress} data={campaignData}/>
+              </Col>
+            ))}
           </Row>
         </section>
         <section className={styles.create_campaign}>
